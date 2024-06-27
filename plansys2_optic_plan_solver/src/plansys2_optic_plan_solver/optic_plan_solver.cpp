@@ -22,16 +22,21 @@ void OPTICPlanSolver::configure(
   rclcpp_lifecycle::LifecycleNode::SharedPtr & lc_node,
   const std::string & plugin_name)
 {
+  RCLCPP_INFO(lc_node->get_logger(), "OPTICPlanSolver::configure");
   parameter_name_ = plugin_name + ".arguments";
   lc_node_ = lc_node;
   lc_node_->declare_parameter<std::string>(parameter_name_, "");
+  RCLCPP_INFO(lc_node_->get_logger(), "OPTICPlanSolver::configure");
+
 }
 
 std::optional<plansys2_msgs::msg::Plan>
 OPTICPlanSolver::getPlan(
   const std::string & domain, const std::string & problem,
-  const std::string & node_namespace)
+  const std::string & node_namespace,
+  const rclcpp::Duration solver_timeout)
 {
+  RCLCPP_INFO(lc_node_->get_logger(), "OPTICPlanSolver::getPlan");
   if (node_namespace != "") {
     std::filesystem::path tp = std::filesystem::temp_directory_path();
     for (auto p : std::filesystem::path(node_namespace) ) {
@@ -50,13 +55,13 @@ OPTICPlanSolver::getPlan(
   std::ofstream problem_out("/tmp/" + node_namespace + "/problem.pddl");
   problem_out << problem;
   problem_out.close();
-
+  RCLCPP_INFO(lc_node_->get_logger(), "Sending system command");
   system(
     ("ros2 run optic_planner optic_planner " +
     lc_node_->get_parameter(parameter_name_).value_to_string() +
     " /tmp/" + node_namespace + "/domain.pddl /tmp/" + node_namespace +
     "/problem.pddl > /tmp/" + node_namespace + "/plan").c_str());
-
+  RCLCPP_INFO(lc_node_->get_logger(), "Waiting for plan");
   std::string line;
   std::ifstream plan_file("/tmp/" + node_namespace + "/plan");
   bool solution = false;

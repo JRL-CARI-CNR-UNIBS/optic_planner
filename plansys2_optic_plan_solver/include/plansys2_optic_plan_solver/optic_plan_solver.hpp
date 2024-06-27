@@ -7,6 +7,8 @@
 
 #include "plansys2_core/PlanSolverBase.hpp"
 
+using std::chrono_literals::operator""s;
+
 namespace plansys2
 {
 
@@ -23,11 +25,17 @@ public:
 
   std::optional<plansys2_msgs::msg::Plan> getPlan(
     const std::string & domain, const std::string & problem,
-    const std::string & node_namespace = "");
+    const std::string & node_namespace = "",
+    const rclcpp::Duration solver_timeout = 15s);
+
 
   std::string check_domain(
     const std::string & domain,
     const std::string & node_namespace = "");
+
+  inline bool isDomainValid(
+    const std::string & domain,
+    const std::string & node_namespace = ""){return true;};
 };
 
 }  // namespace plansys2
