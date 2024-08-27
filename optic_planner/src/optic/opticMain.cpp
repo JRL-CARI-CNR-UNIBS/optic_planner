@@ -581,9 +581,6 @@ int main(int argc, char * argv[])
     } else {
         planAndConstraints = FF::search(reachesGoals);
     }
-    cout << "HEREEEEE!!!" << endl;
-    // cout << FFEvent::printPlan(*planAndConstraints.plan);
-    cout << "HEREEEEE!!!" << endl;
 
     if (spSoln) {
 
@@ -608,7 +605,6 @@ int main(int argc, char * argv[])
                 cout << "; States evaluated: " << RPGHeuristic::statesEvaluated << endl;
                 cout << "; Cost: " << planAndConstraints.quality << endl;
             }
-            cout << "HEREEEEE!!!" << endl;
             FFEvent::printPlan(*spSoln);
             std::ofstream outFile(output_file_path);
             if (outFile.is_open()) {
@@ -616,10 +612,8 @@ int main(int argc, char * argv[])
                 FFEvent::printPlan(*spSoln, outFile);
                 outFile.close();
             } else {
-                std::cerr << "Errore nell'aprire il file di output!" << std::endl;
+                std::cerr << "Error during output file opening phase!" << std::endl;
             }               
-
-            cout << "HEREEEEEE!!" << endl;
         }
 
         if (benchmark) {
