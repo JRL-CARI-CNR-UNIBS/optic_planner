@@ -6399,8 +6399,11 @@ Solution FF::search(bool & reachedGoal)
             double secs = ((double)refReturn.tms_utime + (double)refReturn.tms_stime) / ((double) sysconf(_SC_CLK_TCK));
 
             if (secs >= Globals::timeLimit) {
+                std::cerr << "HEREEEEEE" << std::endl;
+                cout << "HEREEEEEE" << std::endl;
                 std::cerr << "\n\nTime limit reached: terminating\n";
-                exit(2);
+                return workingBestSolution;
+                // exit(2);
             }
         }
 
@@ -6865,6 +6868,11 @@ Solution FF::search(bool & reachedGoal)
 
                 if (secs >= Globals::timeLimit) {
                     std::cerr << "\n\nTime limit reached: terminating\n";
+                    std::cerr << "HEREEEEEE" << std::endl;
+                    cout << "HEREEEEEE" << std::endl;
+                    std::cerr << "\n\nTime limit reached: terminating\n";
+                    return workingBestSolution;
+
                     exit(2);
                 }
             }

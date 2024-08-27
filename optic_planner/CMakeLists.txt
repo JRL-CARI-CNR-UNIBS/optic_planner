@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
 find_package(Cgl)
 find_package(Cbc)
+find_package(rclcpp REQUIRED)
 
 set(dependencies
     rclcpp

@@ -36,7 +36,7 @@
 #include <limits>
 #include <sstream>
 #include <iostream>
-
+#include <fstream>
 using std::ostringstream;
 using std::endl;
 
@@ -252,5 +252,83 @@ void FFEvent::printPlan(const list<FFEvent> & toPrint)
         }
     }
 }
+
+void FFEvent::printPlan(const list<FFEvent> & toPrint, std::ofstream &outFile)
+{
+    tms refReturn;
+    times(&refReturn);
+
+    double secs = ((double)refReturn.tms_utime + (double)refReturn.tms_stime) / ((double)sysconf(_SC_CLK_TCK));
+
+    int twodp = static_cast<int>(secs * 100.0);
+    int wholesecs = twodp / 100;
+    int centisecs = twodp % 100;
+
+    outFile << "; Time " << wholesecs << ".";
+    if (centisecs < 10) outFile << "0";
+    outFile << centisecs << "\n";
+
+    std::list<FFEvent>::const_iterator planItr = toPrint.begin();
+    const std::list<FFEvent>::const_iterator planEnd = toPrint.end();
+    const int planSize = toPrint.size();
+    std::vector<double> endTS(planSize);
+#ifdef STOCHASTICDURATIONS
+    std::vector<double> endSTS(planSize);
+#endif
+    std::vector<const FFEvent*> planVector(planSize);
+    std::map<double, std::list<int>> sorted;
+    int dc = 0;
+    for (int i = 0; planItr != planEnd; ++planItr, ++i) {
+        if (planItr->isDummyStep()) {
+            ++dc;
+            continue;
+        }
+        if (planItr->time_spec == Planner::E_AT_START) {
+            sorted[planItr->lpTimestamp].push_back(i);
+            planVector[i] = &(*planItr);
+        } else if (planItr->time_spec == Planner::E_AT_END) {
+            endTS[i] = planItr->lpTimestamp;
+#ifdef STOCHASTICDURATIONS
+            endSTS[i] = planItr->stochasticTimestamp->getTimestampForRPGHeuristic();
+#endif
+        }
+    }
+    if (dc) {
+        outFile << "; Dummy steps: " << dc << std::endl;
+    }
+    std::map<double, std::list<int>>::iterator sortedItr = sorted.begin();
+    const std::map<double, std::list<int>>::iterator sortedEnd = sorted.end();
+
+    for (; sortedItr != sortedEnd; ++sortedItr) {
+        std::list<int>::iterator iItr = sortedItr->second.begin();
+        const std::list<int>::iterator iEnd = sortedItr->second.end();
+
+        for (; iItr != iEnd; ++iItr) {
+            const FFEvent* const planItr = planVector[*iItr];
+            if (planItr->lpTimestamp < 0.0000001) {
+                outFile << "0.000";
+            } else {
+                outFile << threeDP(planItr->lpTimestamp);
+            }
+            outFile << ": " << *(planItr->action) << " ";
+            if (planItr->pairWithStep >= 0) {
+                const double dur = endTS[planItr->pairWithStep] - planItr->lpTimestamp;
+                outFile << " [" << threeDP(dur) << "]";
+#ifdef STOCHASTICDURATIONS
+                outFile << ";\t\t {" << planItr->stochasticTimestamp->getTimestampForRPGHeuristic() << "} {" << endSTS[planItr->pairWithStep] << "}";
+#endif
+            } else if (RPGBuilder::getRPGDEs(planItr->action->getID()).empty()) {
+                outFile << " [" << threeDP(RPGBuilder::getNonTemporalDurationToPrint()[planItr->action->getID()]) << "]";
+#ifdef STOCHASTICDURATIONS
+                outFile << ";\t\t {" << planItr->stochasticTimestamp->getTimestampForRPGHeuristic() << "} {" << EPSILON + planItr->stochasticTimestamp->getTimestampForRPGHeuristic() << "}";
+#endif
+            } else {
+                assert(false);
+            }
+            outFile << std::endl;
+        }
+    }
+}
+
 
 };

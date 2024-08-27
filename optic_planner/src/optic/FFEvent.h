@@ -188,7 +188,8 @@ public:
     }
 
     static void printPlan(const list<FFEvent> & toPrint);
-        
+    static void printPlan(const list<FFEvent> & toPrint, std::ofstream &outFile);
+
     static const FFEvent & getDummyStep() {
         static FFEvent toReturn;
         toReturn.time_spec = Planner::E_CONTINUOUS;

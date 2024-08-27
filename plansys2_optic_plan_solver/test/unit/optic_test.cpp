@@ -30,9 +30,9 @@ void test_plan_generation(const std::string & argument = "")
   auto planner = std::make_shared<plansys2::OPTICPlanSolver>();
   planner->configure(node, "OPTIC");
   node->set_parameter(rclcpp::Parameter("OPTIC.arguments", argument));
-
+  std::cerr << "PRE GET PLAN" << std::endl;
   auto plan = planner->getPlan(domain_str, problem_str, "generate_plan_good");
-
+  std::cerr << "POST GET PLAN" << std::endl;
   ASSERT_TRUE(plan);
   ASSERT_EQ(plan.value().items.size(), 3);
   ASSERT_EQ(plan.value().items[0].action, "(move leia kitchen bedroom)");
@@ -42,11 +42,14 @@ void test_plan_generation(const std::string & argument = "")
 
 TEST(optic_plan_solver, generate_plan_good)
 {
+  std::cerr << "PRE TEST PLAN GENERATION" << std::endl;
   test_plan_generation();
+  std::cerr << "POST TEST PLAN GENERATION" << std::endl;
 }
 
 TEST(optic_plan_solver, load_optic_plugin)
 {
+  std::cerr << "PRE TEST LOAD OPTIC PLUGIN" << std::endl;
   try {
     pluginlib::ClassLoader<plansys2::PlanSolverBase> lp_loader(
       "plansys2_core", "plansys2::PlanSolverBase");
@@ -57,10 +60,12 @@ TEST(optic_plan_solver, load_optic_plugin)
     std::cerr << e.what() << std::endl;
     ASSERT_TRUE(false);
   }
+  std::cerr << "POST TEST LOAD OPTIC PLUGIN" << std::endl;
 }
 
 TEST(optic_plan_solver, check_1_ok_domain)
 {
+  std::cerr << "PRE TEST CHECK 1 OK DOMAIN" << std::endl;
   std::string pkgpath = ament_index_cpp::get_package_share_directory("plansys2_optic_plan_solver");
   std::ifstream domain_ifs(pkgpath + "/pddl/domain_1_ok.pddl");
   std::string domain_str((
@@ -69,10 +74,12 @@ TEST(optic_plan_solver, check_1_ok_domain)
 
   auto node = rclcpp_lifecycle::LifecycleNode::make_shared("test_node");
   auto planner = std::make_shared<plansys2::OPTICPlanSolver>();
+  std::cerr << "PRE CONFIGURE" << std::endl;
   planner->configure(node, "OPTIC");
+  std::cerr << "PRE CHECK DOMAIN" << std::endl;
 
   auto result = planner->check_domain(domain_str, "check_1_ok_domain");
-
+  std::cerr << "POST CHECK DOMAIN" << std::endl;
   ASSERT_TRUE(result.empty());
 }
 

@@ -486,7 +486,7 @@ int main(int argc, char * argv[])
         }
         ++argcount;
     }
-
+    Globals::timeLimit = 10;
     #ifdef STOCHASTICDURATIONS
     const int expectFromHere = 3;
     #else
@@ -503,6 +503,14 @@ int main(int argc, char * argv[])
     ++argcount;
     #endif
 
+    std::string output_file_path;
+    if(argc > 3) {
+        cout << argv[argcount + 2] << endl;
+        output_file_path = argv[argcount + 2];
+    }
+    else{
+        output_file_path = "/tmp/plan.pddl";
+    }
     performTIMAnalysis(&argv[argcount]);
 
     cout << std::setprecision(3) << std::fixed;
@@ -562,7 +570,9 @@ int main(int argc, char * argv[])
     Solution planAndConstraints;
 
     list<FFEvent> * & spSoln = planAndConstraints.plan;
+    cout << "RED IN A PLAN"<< readInAPlan;
     if (readInAPlan) {
+        cout  << argc - 1 << " " << argv[argc - 1] << endl;
         spSoln = readPlan(argv[argc - 1]);
         reachesGoals = true;
 #ifndef NDEBUG
@@ -571,6 +581,9 @@ int main(int argc, char * argv[])
     } else {
         planAndConstraints = FF::search(reachesGoals);
     }
+    cout << "HEREEEEE!!!" << endl;
+    // cout << FFEvent::printPlan(*planAndConstraints.plan);
+    cout << "HEREEEEE!!!" << endl;
 
     if (spSoln) {
 
@@ -595,9 +608,18 @@ int main(int argc, char * argv[])
                 cout << "; States evaluated: " << RPGHeuristic::statesEvaluated << endl;
                 cout << "; Cost: " << planAndConstraints.quality << endl;
             }
-
+            cout << "HEREEEEE!!!" << endl;
             FFEvent::printPlan(*spSoln);
+            std::ofstream outFile(output_file_path);
+            if (outFile.is_open()) {
+                outFile << "; Solution Found ";
+                FFEvent::printPlan(*spSoln, outFile);
+                outFile.close();
+            } else {
+                std::cerr << "Errore nell'aprire il file di output!" << std::endl;
+            }               
 
+            cout << "HEREEEEEE!!" << endl;
         }
 
         if (benchmark) {

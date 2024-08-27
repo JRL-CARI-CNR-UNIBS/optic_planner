@@ -18,8 +18,43 @@ OPTICPlanSolver::OPTICPlanSolver()
 {
 }
 
+std::optional<std::filesystem::path>
+OPTICPlanSolver::create_folders(const std::string & node_namespace)
+{
+  RCLCPP_INFO(lc_node_->get_logger(), "OPTICPlanSolver::create_folders");
+  auto output_dir = lc_node_->get_parameter(output_dir_parameter_name_).value_to_string();
+
+  // Allow usage of the HOME directory with the `~` character, returning if there is an error.
+  const char * home_dir = std::getenv("HOME");
+  if (output_dir[0] == '~' && home_dir) {
+    output_dir.replace(0, 1, home_dir);
+  } else if (!home_dir) {
+    RCLCPP_ERROR(
+      lc_node_->get_logger(), "Invalid use of the ~ character in the path: %s", output_dir.c_str()
+    );
+    return std::nullopt;
+  }
+
+  // Create the necessary folders, returning if there is an error.
+  auto output_path = std::filesystem::path(output_dir);
+  if (node_namespace != "") {
+    for (auto p : std::filesystem::path(node_namespace) ) {
+      if (p != std::filesystem::current_path().root_directory()) {
+        output_path /= p;
+      }
+    }
+    try {
+      std::filesystem::create_directories(output_path);
+    } catch (std::filesystem::filesystem_error & err) {
+      RCLCPP_ERROR(lc_node_->get_logger(), "Error writing directories: %s", err.what());
+      return std::nullopt;
+    }
+  }
+  return output_path;
+}
+
 void OPTICPlanSolver::configure(
-  rclcpp_lifecycle::LifecycleNode::SharedPtr & lc_node,
+  rclcpp_lifecycle::LifecycleNode::SharedPtr lc_node,
   const std::string & plugin_name)
 {
   RCLCPP_INFO(lc_node->get_logger(), "OPTICPlanSolver::configure");
@@ -27,7 +62,6 @@ void OPTICPlanSolver::configure(
   lc_node_ = lc_node;
   lc_node_->declare_parameter<std::string>(parameter_name_, "");
   RCLCPP_INFO(lc_node_->get_logger(), "OPTICPlanSolver::configure");
-
 }
 
 std::optional<plansys2_msgs::msg::Plan>
@@ -60,7 +94,7 @@ OPTICPlanSolver::getPlan(
     ("ros2 run optic_planner optic_planner " +
     lc_node_->get_parameter(parameter_name_).value_to_string() +
     " /tmp/" + node_namespace + "/domain.pddl /tmp/" + node_namespace +
-    "/problem.pddl > /tmp/" + node_namespace + "/plan").c_str());
+    "/problem.pddl /tmp/" + node_namespace + "/plan").c_str());
   RCLCPP_INFO(lc_node_->get_logger(), "Waiting for plan");
   std::string line;
   std::ifstream plan_file("/tmp/" + node_namespace + "/plan");
@@ -82,6 +116,8 @@ OPTICPlanSolver::getPlan(
         std::string action = line.substr(colon_pos + 2, colon_par - colon_pos - 1);
         std::string duration = line.substr(colon_bra + 1);
         duration.pop_back();
+        std::cerr << "Time: " << time << " Action: " << action << " Duration: " << duration <<
+          std::endl;
 
         item.time = std::stof(time);
         item.action = action;
@@ -119,7 +155,7 @@ OPTICPlanSolver::check_domain(
 
   system(
     ("ros2 run optic_planner optic_planner /tmp/" + node_namespace + "/check_domain.pddl /tmp/" +
-    node_namespace + "/check_problem.pddl > /tmp/" + node_namespace + "/check.out").c_str());
+    node_namespace + "/check_problem.pddl /tmp/" + node_namespace + "/check.out").c_str());
 
   std::ifstream plan_file("/tmp/" + node_namespace + "/check.out");
 
