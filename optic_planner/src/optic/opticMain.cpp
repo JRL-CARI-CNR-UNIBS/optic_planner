@@ -486,7 +486,7 @@ int main(int argc, char * argv[])
         }
         ++argcount;
     }
-    Globals::timeLimit = 10;
+    Globals::timeLimit = 20;
     #ifdef STOCHASTICDURATIONS
     const int expectFromHere = 3;
     #else
