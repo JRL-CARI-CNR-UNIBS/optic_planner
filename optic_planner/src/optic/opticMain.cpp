@@ -139,8 +139,8 @@ int main(int argc, char * argv[])
     const char * durationManagerString = defaultDurationManager;
     #endif
 
-
-    while (argcount < argc && argv[argcount][0] == '-') {
+    std::string output_file_path = "/tmp/plan.pddl";
+    while (argcount < argc) {
 
         string remainder(&(argv[argcount][1]));
         if (remainder == "citation") {
@@ -184,7 +184,11 @@ int main(int argc, char * argv[])
             cout << "--------------------------------------------------------------------------------\n\n";
 
         } else {
-
+            if(argv[argcount][0] != '-')
+            {
+                ++argcount;
+                continue;
+            }
             switch (argv[argcount][1]) {
             #ifdef POPF3ANALYSIS
             case 'l': {
@@ -344,7 +348,8 @@ int main(int argc, char * argv[])
                     usage(argv);
                     exit(1);
                 }
-                Globals::timeLimit = atoi(&(argv[argcount][2]));
+                cout << "Time limit: " << atoi(&(argv[argcount][2])) * 0.95 << endl;
+                Globals::timeLimit = atoi(&(argv[argcount][2])) * 0.95;
                 break;
             }
             case 'T': {
@@ -432,6 +437,10 @@ int main(int argc, char * argv[])
                 LPScheduler::hybridBFLP = false;
                 break;
             }
+            case 'y': {
+                output_file_path = &(argv[argcount][2]);
+                break;
+            }
             case 'r': {
                 readInAPlan = true;
                 #ifdef POPF3ANALYSIS
@@ -486,35 +495,28 @@ int main(int argc, char * argv[])
         }
         ++argcount;
     }
-    Globals::timeLimit = 20;
+    // Globals::timeLimit = 20;
     #ifdef STOCHASTICDURATIONS
     const int expectFromHere = 3;
     #else
     const int expectFromHere = 2;
     #endif
 
-    if (argcount + ((readInAPlan || debugPreprocessing) ? expectFromHere + 1 : expectFromHere) > argc) {
-        usage(argv);
-        exit(0);
-    }
+    // if (argcount + ((readInAPlan || debugPreprocessing) ? expectFromHere + 1 : expectFromHere) > argc) {
+    //     usage(argv);
+    //     exit(0);
+    // }
 
     #ifdef STOCHASTICDURATIONS
     solutionDeadlinePercentage = atof(argv[argcount]);
     ++argcount;
     #endif
 
-    std::string output_file_path;
-    if(argc > 3) {
-        cout << argv[argcount + 2] << endl;
-        output_file_path = argv[argcount + 2];
-    }
-    else{
-        output_file_path = "/tmp/plan.pddl";
-    }
-    performTIMAnalysis(&argv[argcount]);
+    int domain_arg_number = 1;
+    performTIMAnalysis(&argv[domain_arg_number]);
 
     cout << std::setprecision(3) << std::fixed;
-
+    cout << "File path" << output_file_path << "\n";
     #ifdef STOCHASTICDURATIONS
     setDurationManager(durationManagerString);
     #endif

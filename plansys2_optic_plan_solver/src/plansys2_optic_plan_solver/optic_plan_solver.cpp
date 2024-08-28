@@ -89,12 +89,15 @@ OPTICPlanSolver::getPlan(
   std::ofstream problem_out("/tmp/" + node_namespace + "/problem.pddl");
   problem_out << problem;
   problem_out.close();
+  std::stringstream timeout_s;
+  timeout_s << solver_timeout.seconds();
   RCLCPP_INFO(lc_node_->get_logger(), "Sending system command");
   system(
     ("ros2 run optic_planner optic_planner " +
     lc_node_->get_parameter(parameter_name_).value_to_string() +
-    " /tmp/" + node_namespace + "/domain.pddl /tmp/" + node_namespace +
-    "/problem.pddl /tmp/" + node_namespace + "/plan").c_str());
+    " /tmp/" + node_namespace + "/domain.pddl /tmp/" + node_namespace + "/problem.pddl"
+    " -x" + timeout_s.str() +
+    " -y/tmp/" + node_namespace + "/plan").c_str());
   RCLCPP_INFO(lc_node_->get_logger(), "Waiting for plan");
   std::string line;
   std::ifstream plan_file("/tmp/" + node_namespace + "/plan");
@@ -155,7 +158,7 @@ OPTICPlanSolver::check_domain(
 
   system(
     ("ros2 run optic_planner optic_planner /tmp/" + node_namespace + "/check_domain.pddl /tmp/" +
-    node_namespace + "/check_problem.pddl /tmp/" + node_namespace + "/check.out").c_str());
+    node_namespace + "/check_problem.pddl -x10 -y/tmp/" + node_namespace + "/check.out").c_str());
 
   std::ifstream plan_file("/tmp/" + node_namespace + "/check.out");
 
