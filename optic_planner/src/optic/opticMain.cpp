@@ -348,8 +348,8 @@ int main(int argc, char * argv[])
                     usage(argv);
                     exit(1);
                 }
-                cout << "Time limit: " << atoi(&(argv[argcount][2])) * 0.95 << endl;
-                Globals::timeLimit = atoi(&(argv[argcount][2])) * 0.95;
+                cout << "Time limit: " << atoi(&(argv[argcount][2])) * 0.8 << endl;
+                Globals::timeLimit = atoi(&(argv[argcount][2])) * 0.8;
                 break;
             }
             case 'T': {
